@@ -9,8 +9,8 @@ class cls_geolocateapi {
 	public $is_verbose;  // Will produce limited debugging information.
 
 	function __construct(){
-		$this->my_key = file_get_contents("/mnt/DataGit/Programming/GeoLocate/keys/geolocate.key"); # This is a simple text file, not JSON
-		$my_file_json = file_get_contents("/mnt/DataGit/Programming/GeoLocate/keys/latlong2.json");
+		$this->my_key = file_get_contents("/var/www/Geolocate/keys/geolocate.key"); # This is a simple text file, not JSON
+		$my_file_json = file_get_contents("/var/www/Geolocate/keys/latlong2.json");
 		$this->my_decode_file_json = json_decode($my_file_json);
 		$this->whitelist = $this->my_decode_file_json->{"whitelist_LATLONG"};
 		$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
@@ -64,14 +64,14 @@ class cls_geolocateapi {
 	// This function will perform a basic check for LAN IPs that are passed in
 	public function fct_test_LAN($arg_IP){
 		if(substr($arg_IP,0,8) == '192.168.' or substr($arg_IP,0,7) == '172.16.' or substr($arg_IP,0,3) == '10.'){
-		//if(1==2){  // This is just for debugging
+			//if(1==2){  // This is just for debugging
 			return True;
 		}
 		else{
 			return False;
 		}
 	}
-
+	
 	// The followikng function will call the above functions.
 	// This will make a caller's method calling these routines easier.
 	function fct_geolocate_comprehensive($arg_IP=''){
@@ -104,47 +104,5 @@ class cls_geolocateapi {
 	}
 }
 
-
-/*
-// Begin mainline... incoming argument is IPv4 address and verbose flag
-*/
-
-$wrk_cls_api = new cls_geolocateapi();
-
-$arguments = getopt("i::v");  //IP address is optional, verbose flag is optional or just plain "-v"
-#var_dump($arguments);
-if(isset($arguments['i'])){
-	$arg_incoming = $arguments['i'];
-}
-else{
-	$arg_incoming = $wrk_cls_api->fct_grab_client_IP();
-}
-
-// This will reverse what normally happens with getopt and no value passed with the -v argument.
-if(isset($arguments['v'])){
-	$verbose = True;
-}
-else{
-	$verbose = False;
-}
-
-$wrk_cls_api->fct_retrieve_IP_info($arg_incoming);
-#var_dump($wrk_cls_api->response);
-if(isset($wrk_cls_api->response)){
-	$is_whitelisted = $wrk_cls_api->fct_whitelist_validation();
-}
-else{
-	$is_whitelisted = 'False';
-}
-### Produce output, whether it's on a command prompt or return to a calling program
-if(php_sapi_name() == 'cli'){
-	if($verbose){
-		echo 'Response within the class object: '.$wrk_cls_api->response;
-		echo 'Whitelisted return value?: '.$is_whitelisted;
-	}
-}
-else {
-	return $wrk_cls_api->response;
-}
 
 ?>
