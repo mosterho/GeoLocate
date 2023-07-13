@@ -53,10 +53,13 @@ class cls_geolocateapi {
 		$tempobj = json_decode($this->response);  // convert returned geolocate information in JSON to php object.
 		// Compare the response object's latitude and longitude against the "northwest" and "southeast" rectangle.
 		// Format of whitelist array entries is: 1.northwest latitude, 2.northwest longitude, 3.southeast latitude, 4.southeast longitude.
-		foreach($this->whitelist as $key2 => $value2){
-			if($tempobj->latitude <= $value2[1] and $tempobj->latitude >= $value2[3] and $tempobj->longitude >= $value2[2] and $tempobj->longitude <= $value2[4]){
-				return True;
+		if(isset($tempobj)){
+			foreach($this->whitelist as $key2 => $value2){
+				if($tempobj->latitude <= $value2[1] and $tempobj->latitude >= $value2[3] and $tempobj->longitude >= $value2[2] and $tempobj->longitude <= $value2[4]){
+					return True;
+				}
 			}
+			return False;
 		}
 		return False;
 	}
@@ -71,7 +74,7 @@ class cls_geolocateapi {
 			return False;
 		}
 	}
-	
+
 	// The followikng function will call the above functions.
 	// This will make a caller's method calling these routines easier.
 	function fct_geolocate_comprehensive($arg_IP=''){
@@ -97,7 +100,7 @@ class cls_geolocateapi {
 		}
 
 		if($this->is_verbose){
-			echo 'JSON verbose setting: '.$this->is_verbose;
+			echo 'JSON verbose setting: '.$this->is_verbose?'True':'False';
 			echo 'Within geolocation check, your IP is: '.$arg_incoming.' and general info is: '.$this->response;
 		}
 		return $is_whitelisted;

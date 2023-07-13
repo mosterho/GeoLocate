@@ -38,7 +38,8 @@ else{
 if(php_sapi_name() == 'cli'){
 	if($verbose){
 		echo 'Response within the class object: '.$wrk_cls_api->response;
-		echo 'Whitelisted return value?: '.$is_whitelisted;
+		echo 'Whitelisted return value?: ';
+		echo $is_whitelisted?'True':'False';
 	}
 }
 else {
