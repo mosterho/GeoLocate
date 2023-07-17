@@ -1,2 +1,5 @@
-keys/
+
+keys/geolocate.key
+keys/URL.txt
+keys/latlong2.json
 errorhandler/error_handler.json

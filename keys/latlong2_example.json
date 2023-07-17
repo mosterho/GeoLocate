@@ -1,0 +1,9 @@
+{
+	"whitelist_LATLONG": [
+		["Honolulu, Hawaii 4.4.4.4  latitude 21.307796 longitude -157.859187", 22, -158, 21, -157],
+		["Mountain View, California 8.8.8.8  latitude:37.405992,longitude:-122.078515", 38, -123, 37, -121],
+		["All of Colorado", 41, -109, 37, -77],
+		["All of South Dakota, parts of Iowa, Minnesota, Nebraska", 46, -104, 42.5, -96.5]
+	],
+	"whitelist_verbose":false
+}
