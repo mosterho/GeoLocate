@@ -1,5 +1,7 @@
 <?php
 
+// This is one way to call the geolocate module and process the results. This does NOT call all of
+// the modules that is included in the fct_geolocate_comprehensive function.
 
 /*
 // Begin mainline... incoming argument is IPv4 address and verbose flag

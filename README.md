@@ -4,19 +4,31 @@
 
 
 ## Basics
-This set of two programs will retrieve basic information about an IP using a web service call. They are "geolocate_API.php and "geolocate_CLI.php". The programs in this repository are written in PHP. The API program is a modified copy the PHP code in the IP2Location website.  
+This set of programs will retrieve basic information about an IP using a web service call. They are "geolocate_API.php, "geolocate_CLI.php" and "geolocate_CLI_V2.php". The programs in this repository are written in PHP. The API program is a modified copy the PHP code in the IP2Location website.  
 
-I currently use the API program to block unwanted IP addresses from accessing my websites. To use your own version of checking external IPs calling your web pages, embed the API program in a PHP program using "include".
+The API program can be used to block unwanted IP addresses from accessing websites. To use your own version of checking external IPs calling your web pages, embed the API program in a PHP program using "include".
 
 
 ## How it works
-The program reads a json file that contains a "white list" of latitudes and longitudes to compare with results obtained from the program. If you were to look at a map and draw a box surrounding the approximate locations of where an IP address should be allowed, the values correspond to:
-1. upper-left latitude;
-2. upper-left longitude;
-3. lower-right latitude;
-4. lower-right longitude.
+The API program flow can be explained by following the fct_geolocate_comprehensive function code.
+1. If an IP address is supplied, use it. Otherwise, grab the IP of the calling web client IP.
+2. Test to determine if the IP address is a local/LAN IP (e.g., 192.168.1.1) or is an external/WAN IP.
+	If it's a local IP, set the "is whitelisted?" flag to True.
+	*If it's a WAN IP, retrieve the external IP information, including latitude, longitude, city, etc*
+3. If valid information is retrieved for the WAN IP, check if it's in the whitelist section of the JSON file based on latitude and longitude.
+	Set the "is whitelisted?" flag to True if the latitude/longitude matches an entry, otherwise set the flag to False.
+4. Regardless of the results above, send available information to the logging function. This will write an entry into the syslog of the web server.
+5. Return the "is whitelisted?" flag to the calling module/program.
 
-For example, approximate json array values for all of Colorado and all of South Dakota with parts of Iowa, Minnesota and Nebraska (since the south-eastern corner of South Dakota is not a right angle) would be:
+
+## Details of the JSON whitelist section
+The program reads a json file that contains a "white list" of latitudes and longitudes to compare with results obtained from the program. The first (0th entry/element) of the array is a description of the aread to be included. For elements 1-4, if you were to look at a map and draw a box surrounding the approximate locations of where an IP address should be allowed, the values correspond to:
+1. upper-left (Northwest) latitude;
+2. upper-left (Northwest) longitude;
+3. lower-right (Southeast) latitude;
+4. lower-right (Southeast) longitude.
+
+For example, *approximate* json array values for all of Colorado and all of South Dakota with parts of Iowa, Minnesota and Nebraska (since the south-eastern corner of South Dakota is not a right angle) would be:
 
 {  
 	"whitelist_LATLONG": [  
@@ -27,9 +39,13 @@ For example, approximate json array values for all of Colorado and all of South 
 
 
 ## How to call the program from a Linux terminal session
-The API program can be called from other programs that utilize this as a module. The CLI program can be called from a Linux command line interface (terminal session).
+There are two CLI programs: geolocate_CLI.php and geolocate_CLI_V2.php.
 
-The program uses two optional arguments: an IP address and a verbose flag.
+The API program can be called from other programs that utilize this as a module. The CLI programs can be called from a Linux command line interface (terminal session).
+
+### geolocate_CLI.php
+
+The geolocate_CLI.php program makes individual calls to the class's functions and allows for a more precise utilization of the module. The program uses two optional arguments: an IP address and a verbose flag.
 
 For example calling the program without an IP address or verbose flag:
 
@@ -70,6 +86,11 @@ php geolocate_CLI.php -i'999.999.999.999' -v
 Which gave the following:  
 Response within the class object: Whitelisted return value?: False
 
+
+### geolocate_CLI_V2.php
+
+The geolocate_CLI_V2.php program is much more concise and uses less code than geolocate_CLI.php. This shows the benefits of simply instantiating the class and then calling the comprehensive function to determine if the IP address is whitelisted. The class's response variable is still available if needed.
+
 ## How to call the program from another PHP programs
 The code to call this module from another PHP module would be similar to the CLI program or the following code.
 
@@ -77,11 +98,16 @@ try{
 	include '/var/www/Geolocate/geolocate_API.php';
 	$cls_geolocate = new cls_geolocateapi();
 	$is_whitelisted = $cls_geolocate->fct_geolocate_comprehensive();
+	// Do something if the IP is not white listed.
 	if(!$is_whitelisted){
-		#echo "Is IP whitelisted?: ".$is_whitelisted?'True':'False'.'  response?------'.$cls_geolocate->response;
-		#var_dump($cls_geolocate->response);
-		echo "We're having trouble with the web page...";
-		exit();
+		###echo "Is IP whitelisted?: ".$is_whitelisted?'True':'False'.'  response?------'.$cls_geolocate->response;
+		###var_dump($cls_geolocate->response);
+		###echo "We're having trouble with the web page...";
+		###exit();
+	}
+	// if it is white listed, do something else.
+	else{
+		### some functions
 	}
 }
 catch(Exception $e){

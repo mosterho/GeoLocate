@@ -1,5 +1,7 @@
 <?php
 
+include '/var/www/Geolocate/errorhandler/error_handler.php';  // Optional, this will write an entry to the syslog of the web server.
+
 class cls_geolocateapi {
 	public $my_key;  //geolocate web api key.
 	public $response;  // Response to call to geolocate API (city, state, latitude/longitude. etc)
@@ -16,6 +18,24 @@ class cls_geolocateapi {
 		$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
 	}
 
+	function fct_geolog($arg_is_whitelisted){
+		// for the white listed value, literally pass in True or False, not the boolean.
+		if($arg_is_whitelisted == true){
+			$wrk_whitelisted = 'True';
+		}
+		else{
+			$wrk_whitelisted = 'False';
+		}
+		$msg = ' whitelisted: '.$wrk_whitelisted.' Response: '.$this->response;
+		// logmessage is a function in the 'error_handlerxxx.php' program.
+		try{
+			logmessage($msg);
+		}
+		catch(Exception $e){
+			echo $e;
+		}
+	}
+
 	// This function is copied from some website
 	// This will determine which client WAN IP is the best to use.
 	public function fct_grab_client_IP(){
@@ -28,7 +48,7 @@ class cls_geolocateapi {
 		} elseif(!empty($_SERVER['REMOTE_ADDR'])) {
 			$this->client_IP = $_SERVER['REMOTE_ADDR'];
 		}
-		return $this->client_IP;  // It's possible this can be an empty variable.
+		return $this->client_IP;  // It's possible this can be an empty variable, esp. if a LAN IP.
 	}
 
 	// The following function is straight from ip2location.io documentation
@@ -59,15 +79,13 @@ class cls_geolocateapi {
 					return True;
 				}
 			}
-			return False;
 		}
 		return False;
 	}
 
 	// This function will perform a basic check for LAN IPs that are passed in
 	public function fct_test_LAN($arg_IP){
-		if(substr($arg_IP,0,8) == '192.168.' or substr($arg_IP,0,7) == '172.16.' or substr($arg_IP,0,3) == '10.'){
-			//if(1==2){  // This is just for debugging
+		if(substr($arg_IP,0,10) == '192.168.0.' or substr($arg_IP,0,7) == '172.16.' or substr($arg_IP,0,3) == '10.' or substr($arg_IP,0,9) == '127.0.0.1'){
 			return True;
 		}
 		else{
@@ -86,16 +104,18 @@ class cls_geolocateapi {
 		}
 		// If this is a LAN IP, skip testing
 		$is_LANIP = $this->fct_test_LAN($arg_incoming);
-		if($is_LANIP){
-			$is_whitelisted = True;
+		#var_dump($is_LANIP);
+		if($is_LANIP == true){
+			$is_whitelisted = true;
 		}
+		// if not a LAN IP, retrieve IP info.
 		else{
 			$this->fct_retrieve_IP_info($arg_incoming);
 			if(isset($this->response)){
 				$is_whitelisted = $this->fct_whitelist_validation();
 			}
 			else{
-				$is_whitelisted = False;
+				$is_whitelisted = false;
 			}
 		}
 
@@ -103,6 +123,8 @@ class cls_geolocateapi {
 			echo 'JSON verbose setting: '.$this->is_verbose?'True':'False';
 			echo 'Within geolocation check, your IP is: '.$arg_incoming.' and general info is: '.$this->response;
 		}
+		// Comment the following line to NOT write to syslog.
+		$this->fct_geolog($is_whitelisted);
 		return $is_whitelisted;
 	}
 }
