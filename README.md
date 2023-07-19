@@ -91,8 +91,9 @@ Response within the class object: Whitelisted return value?: False
 
 The geolocate_CLI_V2.php program is much more concise and uses less code than geolocate_CLI.php. This shows the benefits of simply instantiating the class and then calling the comprehensive function to determine if the IP address is whitelisted. The class's response variable is still available if needed.
 
-## How to call the program from another PHP programs
-The code to call this module from another PHP module would be similar to the CLI program or the following code.
+## How to call the Geolocate program from another PHP program
+### Calling the comprehensive function
+The code to call this module from another PHP module would be similar to the CLI program or the following code. Note the lines of code that are commented-out; these can be used to customize how your program can react to an IP that is whitelisted or not.
 
 try{
 	include '/var/www/Geolocate/geolocate_API.php';
@@ -114,10 +115,26 @@ catch(Exception $e){
 	echo 'Error within Geolocate module: '.$e;
 }
 
-
 1. Create an instance of the class
 2. Call the fct_geolocate_comprehensive(); function. This will retrieve IP information and place it in a variable within the class. Also the function will return a true/false boolean if the IP address is in the "whitelist_LATLONG" section of the "latlong.json" file.
-3. if the local variable is set, you will be able to check the class variable "response" for the external IP information.
+3. If the local variable is set, you will be able to check the class variable "response" for the external IP information.
+4. Return the "response" object to the calling program.  
+	The response variable will contain the following for IP address 4.4.4.4:
+	{"ip":"4.4.4.4","country_code":"US","country_name":"United States of America","region_name":"Hawaii","city_name":"Honolulu","latitude":21.307796,"longitude":-157.859187,"zip_code":"96801","time_zone":"-10:00","asn":"3356","as":"Level 3 Parent LLC","is_proxy":true
+5. *NOTE:* calling the "fct_geolocate_comprehensive" function will write an entry to the syslog.
+
+
+### Calling the fct_retrieve_IP_info function (just to get the "response" variable values)
+The code to call this module from another PHP module would be similar to the following code.
+
+include '/var/www/Geolocate/geolocate_API.php';
+wrk_cls_api = new cls_geolocateapi();
+$wrk_cls_api->fct_retrieve_IP_info($IP_to_geolocate);
+$tempobj = json_decode($wrk_cls_api->response);  // convert returned geolocate information in JSON to php object.
+
+1. Create an instance of the class
+2. Call the fct_retrieve_IP_info() function -- don't forget to include a valid IP address as an argument. This will retrieve IP information and place it in a variable within the class. This function will NOT return any variables.
+3. If the "response" class variable is set, you will be able to check the external IP information.
 4. Return the "response" object to the calling program.  
 	The response variable will contain the following for IP address 4.4.4.4:
 	{"ip":"4.4.4.4","country_code":"US","country_name":"United States of America","region_name":"Hawaii","city_name":"Honolulu","latitude":21.307796,"longitude":-157.859187,"zip_code":"96801","time_zone":"-10:00","asn":"3356","as":"Level 3 Parent LLC","is_proxy":true

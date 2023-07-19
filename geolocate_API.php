@@ -58,7 +58,7 @@ class cls_geolocateapi {
 		curl_setopt($ch, CURLOPT_URL, 'https://api.ip2location.io/?' . http_build_query([
 			'ip'      => $arg_IP,
 			'key'     => $this->my_key,
-			'format'  => 'jso',
+			'format'  => 'json',
 		]));
 		curl_setopt($ch, CURLOPT_FAILONERROR, 1);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
