@@ -1,6 +1,6 @@
 <?php
 
-include '/var/www/Geolocate/errorhandler/error_handler.php';  // Optional, this will write an entry to the syslog of the web server.
+##include '/var/www/Geolocate/errorhandler/error_handler2.php';  // Optional, this will write an entry to the syslog of the web server.
 
 class cls_geolocateapi {
 	public $my_key;  //geolocate web api key.
@@ -9,6 +9,7 @@ class cls_geolocateapi {
 	public $client_IP;  // The client WAN IP determined if none was pasased in to program.
 	public $whitelist;  // Whitelist from JSON file
 	public $is_verbose;  // Will produce limited debugging information.
+	public $geolocate_available = False;
 
 	function __construct(){
 		$this->my_key = file_get_contents("/var/www/Geolocate/keys/geolocate.key"); # This is a simple text file, not JSON
@@ -16,10 +17,16 @@ class cls_geolocateapi {
 		$this->my_decode_file_json = json_decode($my_file_json);
 		$this->whitelist = $this->my_decode_file_json->{"whitelist_LATLONG"};
 		$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
+		if(file_exists('/var/www/Geolocate/errorhandler/error_handler.php')){
+			include '/var/www/Geolocate/errorhandler/error_handler.php';  // Optional, this will write an entry to the syslog of the web server.
+			$this->geolocate_available = True;
+		}
 	}
 
+	// This function will write information to the syslog via the error_handler "logmessage" php module.
+	// the "logmessage" function is part of the include '/var/www/Geolocate/errorhandler/error_handler.php' code.
 	function fct_geolog($arg_is_whitelisted){
-		// for the white listed value, literally pass in True or False, not the boolean.
+		// To build the actual message, for the white listed value, literally pass in True or False, not the boolean.
 		if($arg_is_whitelisted == true){
 			$wrk_whitelisted = 'True';
 		}
@@ -124,7 +131,12 @@ class cls_geolocateapi {
 			echo 'Within geolocation check, your IP is: '.$arg_incoming.' and general info is: '.$this->response;
 		}
 		// Comment the following line to NOT write to syslog.
-		$this->fct_geolog($is_whitelisted);
+		if($this->geolocate_available == True){
+			$this->fct_geolog($is_whitelisted);
+		}
+		else{
+			echo 'Geolocate JSON file does not exist';
+		}
 		return $is_whitelisted;
 	}
 }

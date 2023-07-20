@@ -7,7 +7,7 @@
 */
 
 try{
-	include '/var/www/GeoLocate/geolocate_API.php';
+	include '/var/www/Geolocate/geolocate_API.php';
 	$cls_geolocate = new cls_geolocateapi();
 	$is_whitelisted = $cls_geolocate->fct_geolocate_comprehensive();
 	if(!$is_whitelisted){
