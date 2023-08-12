@@ -42,6 +42,7 @@ if(php_sapi_name() == 'cli'){
 		echo 'Response within the class object: '.$wrk_cls_api->response;
 		echo 'Whitelisted return value?: ';
 		echo $is_whitelisted?'True':'False';
+		echo PHP_EOL;
 	}
 }
 else {

@@ -1,24 +1,29 @@
 <?php
 
-##include '/var/www/Geolocate/errorhandler/error_handler2.php';  // Optional, this will write an entry to the syslog of the web server.
-
 class cls_geolocateapi {
 	public $my_key;  //geolocate web api key.
 	public $response;  // Response to call to geolocate API (city, state, latitude/longitude. etc)
 	public $my_decode_file_json;  // JSON file containing whitelisted latitude/longitude and verbose setting.
 	public $client_IP;  // The client WAN IP determined if none was pasased in to program.
+	public $LAN_IP = False; // Is this is LAN IP
 	public $whitelist;  // Whitelist from JSON file
 	public $is_verbose;  // Will produce limited debugging information.
 	public $geolocate_available = False;
 
 	function __construct(){
-		$this->my_key = file_get_contents("/var/www/Geolocate/keys/geolocate.key"); # This is a simple text file, not JSON
-		$my_file_json = file_get_contents("/var/www/Geolocate/keys/latlong2.json");
+		#$curwd = getcwd();
+		##echo $curwd.PHP_EOL;
+		$this->my_key = file_get_contents("/home/site/wwwroot/Geolocate/keys/geolocate.key"); # This is a simple text file, not JSON
+		$my_file_json = file_get_contents("/home/site/wwwroot/Geolocate/keys/latlong2.json");
 		$this->my_decode_file_json = json_decode($my_file_json);
 		$this->whitelist = $this->my_decode_file_json->{"whitelist_LATLONG"};
 		$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
-		if(file_exists('/var/www/Geolocate/errorhandler/error_handler.php')){
-			include '/var/www/Geolocate/errorhandler/error_handler.php';  // Optional, this will write an entry to the syslog of the web server.
+
+		#$curwd = getcwd();
+		$includestr = '/home/site/wwwroot/Geolocate/errorhandler/error_handler.php';
+		if(file_exists($includestr)){
+			include $includestr;
+			#var_dump($includestr);
 			$this->geolocate_available = True;
 		}
 	}
@@ -33,7 +38,7 @@ class cls_geolocateapi {
 		else{
 			$wrk_whitelisted = 'False';
 		}
-		$msg = ' whitelisted: '.$wrk_whitelisted.' Response: '.$this->response;
+		$msg = ' whitelisted: '.$wrk_whitelisted.' Response: '.$this->response.PHP_EOL;
 		// logmessage is a function in the 'error_handlerxxx.php' program.
 		try{
 			logmessage($msg);
@@ -92,12 +97,13 @@ class cls_geolocateapi {
 
 	// This function will perform a basic check for LAN IPs that are passed in
 	public function fct_test_LAN($arg_IP){
-		if(substr($arg_IP,0,10) == '192.168.0.' or substr($arg_IP,0,7) == '172.16.' or substr($arg_IP,0,3) == '10.' or substr($arg_IP,0,9) == '127.0.0.1'){
-			return True;
+		if($arg_IP != ''){
+			if(substr($arg_IP,0,10) == '192.168.0.' or substr($arg_IP,0,7) == '172.16.' or substr($arg_IP,0,3) == '10.' or substr($arg_IP,0,9) == '127.0.0.1'){
+				$this->LAN_IP = True;
+				return True;
+			}
 		}
-		else{
-			return False;
-		}
+		return False;
 	}
 
 	// The followikng function will call the above functions.
@@ -128,14 +134,14 @@ class cls_geolocateapi {
 
 		if($this->is_verbose){
 			echo 'JSON verbose setting: '.$this->is_verbose?'True':'False';
-			echo 'Within geolocation check, your IP is: '.$arg_incoming.' and general info is: '.$this->response;
+			echo 'Within geolocation check, your IP is: '.$arg_incoming.' and general info is: '.$this->response.PHP_EOL;
 		}
 		// Comment the following line to NOT write to syslog.
 		if($this->geolocate_available == True){
 			$this->fct_geolog($is_whitelisted);
 		}
 		else{
-			echo 'Geolocate JSON file does not exist';
+			echo 'Geolocate JSON file does not exist'.PHP_EOL;
 		}
 		return $is_whitelisted;
 	}

@@ -6,7 +6,8 @@ function logmessage($arg_message='A default message') {
   // https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1
   // Determine message priority "prival" based on syslog format. Facility "LOCAL0" and severity "notice".
 
-  $my_json = file_get_contents("/var/www/Geolocate/errorhandler/error_handler.json");
+
+  $my_json = file_get_contents("/home/site/wwwroot/Geolocate/errorhandler/error_handler.json");
   $my_decoded_json = json_decode($my_json);
   $message_defaults = $my_decoded_json->{"message_defaults"};
 
