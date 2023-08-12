@@ -56,5 +56,5 @@ jobs:
         with:
           app-name: 'htvfdpoints'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_503B81398041495DAF29C359D1848DF6 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AD9E1896F67E4A829A52E5609F142FEE }}
           package: .
