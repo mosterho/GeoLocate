@@ -1,5 +1,24 @@
 <?php
 
+// This module will determine the IP address of the calling/client IP address.
+// Central to this module is the call to the fct_retrieve_IP_info function and its
+// ip2location.io external module call. The ip2location.io website will return a
+// client's name, address, city, latitude and longitude if it is
+// an external WAN IP that calls this program. If if cannot determine if a WAN IP called it (which is not likely),
+// A seperate function will determine if a LAN IP (e.g., 127.0.0.1, etc.) called it.
+// The IP's latitude and longitude is then compared to a list of approved/whitelist locations and IPs that can use
+// the parent/calling program. This information is a JSON file "latlong2.json".
+// Set the class's "whitelist" public variable to True/False.
+
+// **** always log the calling client IP address to the "error handler" function.
+
+// The fct_geolocate_comprehensive function will call all the necessary functions in this program
+// for ease for the coder, rather than calling each cuntion individually. The coder just needs to instantiate
+// a new class in the calling program and execute the fct_geolocate_comprehensive funntion.
+// Please see either geolocate_CLI.php or geolocate_CLI_V2.php for examples.
+
+
+
 class cls_geolocateapi {
 	public $my_key;  //geolocate web api key.
 	public $response;  // Response to call to geolocate API (city, state, latitude/longitude. etc)
@@ -8,27 +27,31 @@ class cls_geolocateapi {
 	public $LAN_IP = False; // Is this a LAN IP
 	public $whitelist;  // Whitelist from JSON file
 	public $is_verbose;  // Will produce limited debugging information.
+	public $wrk_cls_error_handler;
 	public $geolocate_available = False;  // Used for logging
 
 	function __construct(){
-		$this->my_key = file_get_contents("/home/site/GeoLocate/keys/geolocate.key"); # This is a simple text file, not JSON
-		$my_file_json = file_get_contents("/home/site/GeoLocate/keys/latlong2.json");
+		$this->my_key = file_get_contents("/home/ESIS/GeoLocate/keys/geolocate.key"); # This is a simple text file, not JSON
+		$my_file_json = file_get_contents("/home/ESIS/GeoLocate/keys/latlong2.json");
 		$this->my_decode_file_json = json_decode($my_file_json);
 		$this->whitelist = $this->my_decode_file_json->{"whitelist_LATLONG"};
 		$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
 
-		$includestr = '/home/site/errorhandler/error_handler.php';
+		$includestr = '/home/ESIS/errorhandler/error_handler.php';
 		if(file_exists($includestr)){
 			include $includestr;
+			$this->wrk_cls_error_handler = new cls_error_handler();
 			#var_dump($includestr);
 			$this->geolocate_available = True;
-			if($this->is_verbose){
-				echo 'Within geolocate_API, processed __construct'.PHP_EOL;
-			}
+		}
+		if($this->is_verbose){
+			echo '1. Within geolocate_API, processed __construct'.PHP_EOL;
 		}
 	}
 
-	// This function will write information to the syslog via the error_handler "logmessage" php module.
+
+
+	// This function will write information to the log via the error_handler "logmessage" php module.
 	// the "logmessage" function is part of the include '/var/www/Geolocate/errorhandler/error_handler.php' code.
 	function fct_geolog($arg_is_whitelisted){
 		// To build the actual message, for the white listed value, literally pass in True or False, not the boolean.
@@ -41,7 +64,7 @@ class cls_geolocateapi {
 		$msg = ' whitelisted:'.$wrk_whitelisted.' Response:'.$this->response.PHP_EOL;
 		// logmessage is a function in the 'error_handlerxxx.php' program.
 		try{
-			logmessage($msg);
+			$this->wrk_cls_error_handler->logmessage($msg);
 		}
 		catch(Exception $e){
 			echo $e;
@@ -61,13 +84,15 @@ class cls_geolocateapi {
 			$this->client_IP = $_SERVER['REMOTE_ADDR'];
 		}
 		// If an IP is determined, strip away any port info (e.g., 123.456.789.123:12345)
-		echo 'Within fct_grab_client_IP function FIRST ECHO, the Client IP retrieved is: ';
-		echo $this->client_IP;
 		$strcspnpos = strcspn($this->client_IP, ':');
-		echo 'with fct_grab_client_IP function, the : position found is: '.$strcspnpos.PHP_EOL;
-		$str_replace = substr_replace($this->client_IP,'',$strcspnpos);
+		if(is_numeric($strcspnpos)){
+			$str_replace = substr_replace($this->client_IP,'',$strcspnpos);
+		}
 		if($this->is_verbose){
-			echo 'within fct_grab_client_IP function SECOND ECHO, the raw IP obtained is: '.$this->client_IP.PHP_EOL;
+			echo '<br>2. Within fct_grab_client_IP function FIRST ECHO, the raw client IP retrieved is: ';
+			echo $this->client_IP.PHP_EOL;
+			echo '<br>3. with fct_grab_client_IP function, the : position found is: '.$strcspnpos.PHP_EOL;
+			echo '<br>4. within fct_grab_client_IP function SECOND ECHO, the finished IP obtained is: '.$str_replace.PHP_EOL;
 		}
 		return $str_replace;  // It's possible this can be an empty variable, esp. if a LAN IP.
 	}
@@ -75,45 +100,49 @@ class cls_geolocateapi {
 	// The following function is straight from ip2location.io documentation
 	// This will validate the geolocate key and retrieve geolocation information.
 	public function fct_retrieve_IP_info($arg_IP){
-		$ch = curl_init();
-		if (!$ch) {
-    	die("Couldn't initialize a cURL handle");
-		}
-		curl_setopt($ch, CURLOPT_URL, 'https://api.ip2location.io/?' . http_build_query([
-			'ip'      => $arg_IP,
-			'key'     => $this->my_key,
-			'format'  => 'json',
-		]));
-		curl_setopt($ch, CURLOPT_FAILONERROR, 1);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-		$this->response = curl_exec($ch);  // The return value of geolocation information will be in JSON
+		try{
+			$ch = curl_init();
+			if (!$ch) {
+				#die("<br>Within geolocate_API fct_retrieve_IP_info module, couldn't initialize a cURL handle");
+				echo "<br>Within geolocate_API fct_retrieve_IP_info module, couldn't initialize a cURL handle";
+			}
+			curl_setopt($ch, CURLOPT_URL, "https://api.ip2location.io/?" . http_build_query([
+				"ip"      => $arg_IP,
+				"key"     => $this->my_key,
+				"format"  => "json",
+			]));
+			curl_setopt($ch, CURLOPT_FAILONERROR, 1);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+			$this->response = curl_exec($ch);  // The return value of geolocation information will be in JSON
 
-		if (empty($this->response)) {
-			// some kind of an error happened
-			die(curl_error($ch));
-			curl_close($ch); // close cURL handler
-		}
-		else {
-			$info = curl_getinfo($ch);
-			curl_close($ch); // close cURL handler
-
-			if (empty($info['http_code'])) {
-				die("No HTTP code was returned");
+			if (empty($this->response)) {
+				// some kind of an error happened
+				echo '<br> Within geolocate_API fct_retrieve_IP_info, According to curl_exec, the this->response is empty... <br>';
+				#die(curl_error($ch));
+				curl_close($ch); // close cURL handler
 			}
 			else {
-				// load the HTTP codes
-				#$http_codes = parse_ini_file("path/to/the/ini/file/I/pasted/above");
-				// echo results
-				echo "The server responded: <br />";
-				#echo $info['http_code'] . " " . $http_codes[$info['http_code']];
-				echo $info['http_code'] . " " ;
+				$info = curl_getinfo($ch);
+				curl_close($ch); // close cURL handler
+				if (empty($info['http_code'])) {
+				#die("Within geolocate_API fct_retrieve_IP_info, No HTTP code was returned");
+				echo "Within geolocate_API fct_retrieve_IP_info, No HTTP code was returned";
+				}
+				if($this->is_verbose) {
+					echo "<br>5. within fct_retrieve_IP_info, the curl_getinfo result with http_code: ";
+					echo $info['http_code'] . " " . $http_codes[$info['http_code']];
+				}
+			}
+
+			if($this->is_verbose){
+				echo '<br>6. at the end of fct_retrieve_IP_info function, the raw CH value for the cURL is: '.var_dump($ch).PHP_EOL;
+				echo '<br> AND the value of this->response is '.$this->response;
 			}
 		}
-
-		if($this->is_verbose){
-			echo 'within fct_retrieve_IP_info function, the raw CH value for the cURL is: '.var_dump($ch).PHP_EOL;
+		catch(Exception $e){
+			echo $e;
 		}
 	}
 
@@ -127,7 +156,7 @@ class cls_geolocateapi {
 			foreach($this->whitelist as $key2 => $value2){
 				if($tempobj->latitude <= $value2[1] and $tempobj->latitude >= $value2[3] and $tempobj->longitude >= $value2[2] and $tempobj->longitude <= $value2[4]){
 					if($this->is_verbose){
-						echo 'within fct_whitelist_validation function and a whitelisted IP is found, the tempobj obtained is: '.$tempobj.PHP_EOL;
+						echo '<br>7. within fct_whitelist_validation function, a whitelisted IP is found, the tempobj obtained is: '.$tempobj.PHP_EOL;
 					}
 					return True;
 				}
@@ -144,6 +173,7 @@ class cls_geolocateapi {
 				return True;
 			}
 		}
+		$this->LAN_IP = False;
 		return False;
 	}
 
@@ -157,7 +187,7 @@ class cls_geolocateapi {
 			$arg_incoming = $arg_IP;
 		}
 		if($this->is_verbose){
-			echo 'within comprehensive function, IP obtained is: '.$arg_incoming;
+			echo '<br>8. within comprehensive function, IP obtained is: '.$arg_incoming;
 		}
 		// If this is a LAN IP, skip testing
 		$is_LANIP = $this->fct_test_LAN($arg_incoming);
@@ -177,9 +207,9 @@ class cls_geolocateapi {
 		}
 
 		if($this->is_verbose){
-			echo '<br>JSON verbose setting: '.$this->is_verbose;
-			echo '<br>Is IP whitelisted?: '.$is_whitelisted;
-			echo '<br>Within geolocation check, your IP retrieved is: '.$this->client_IP.' additional IP is: '.$arg_incoming.' <br>and general info (response) is: ';
+			echo '<br>9. JSON verbose setting: '.$this->is_verbose;
+			echo '<br>10. Is IP whitelisted?: '.$is_whitelisted;
+			echo '<br>11. Within geolocation check, your IP retrieved is: '.$this->client_IP.' additional IP is: '.$arg_incoming.' <br>and general info (response) is: ';
 			var_dump($this->response);
 			echo '<br>';
 
@@ -189,7 +219,7 @@ class cls_geolocateapi {
 			$this->fct_geolog($is_whitelisted);
 		}
 		else{
-			echo 'Geolocate JSON file does not exist'.PHP_EOL;
+			echo '<br>12. ******************** Geolocate JSON file does not exist'.PHP_EOL;
 		}
 		return $is_whitelisted;
 	}

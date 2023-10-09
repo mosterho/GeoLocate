@@ -3,7 +3,7 @@
 // This is just another way to call the geolocate module and process the results.
 
 try{
-	include '/home/site/GeoLocate/geolocate_API.php';
+	include 'geolocate_API.php';
 	$cls_geolocate = new cls_geolocateapi();
 	$is_whitelisted = $cls_geolocate->fct_geolocate_comprehensive();
 	echo '<br>in the Geolocate web application -----------------------';
