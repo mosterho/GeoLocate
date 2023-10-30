@@ -13,7 +13,7 @@
 // **** always log the calling client IP address to the "error handler" function.
 
 // The fct_geolocate_comprehensive function will call all the necessary functions in this program
-// for ease for the coder, rather than calling each cuntion individually. The coder just needs to instantiate
+// for ease for the coder, rather than calling each function individually. The coder just needs to instantiate
 // a new class in the calling program and execute the fct_geolocate_comprehensive funntion.
 // Please see either geolocate_CLI.php or geolocate_CLI_V2.php for examples.
 
@@ -32,11 +32,10 @@ class cls_geolocateapi {
 
 	function __construct(){
 		$this->my_key = file_get_contents("/home/ESIS/GeoLocate/keys/geolocate.key"); # This is a simple text file, not JSON
-		$my_file_json = file_get_contents("/home/ESIS/GeoLocate/keys/latlong2.json");
-		$this->my_decode_file_json = json_decode($my_file_json);
-		$this->whitelist = $this->my_decode_file_json->{"whitelist_LATLONG"};
-		$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
 
+		$this->fct_load_latlong();  // Load the latitudce/longitude JSON file.
+
+		// Load and instantiate the error handler/logging class. 
 		$includestr = '/home/ESIS/errorhandler/error_handler.php';
 		if(file_exists($includestr)){
 			include $includestr;
@@ -49,6 +48,13 @@ class cls_geolocateapi {
 		}
 	}
 
+
+	function fct_load_latlong(){
+		$my_file_json = file_get_contents("/home/ESIS/GeoLocate/keys/latlong2.json");
+		$this->my_decode_file_json = json_decode($my_file_json);
+		$this->whitelist = $this->my_decode_file_json->{"whitelist_LATLONG"};
+		$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
+	}
 
 
 	// This function will write information to the log via the error_handler "logmessage" php module.
@@ -70,6 +76,7 @@ class cls_geolocateapi {
 			echo $e;
 		}
 	}
+
 
 	// This function is copied from some website
 	// This will determine which client WAN IP is the best to use.
@@ -96,6 +103,7 @@ class cls_geolocateapi {
 		}
 		return $str_replace;  // It's possible this can be an empty variable, esp. if a LAN IP.
 	}
+
 
 	// The following function is straight from ip2location.io documentation
 	// This will validate the geolocate key and retrieve geolocation information.
@@ -146,6 +154,7 @@ class cls_geolocateapi {
 		}
 	}
 
+
 	// This function will read the JSON file to determine if
 	// the IP address is valid within the whitelisted latitude/longitude specs.
 	public function fct_whitelist_validation(){
@@ -165,6 +174,7 @@ class cls_geolocateapi {
 		return False;
 	}
 
+
 	// This function will perform a basic check for LAN IPs that are passed in
 	public function fct_test_LAN($arg_IP){
 		if($arg_IP != ''){
@@ -176,6 +186,7 @@ class cls_geolocateapi {
 		$this->LAN_IP = False;
 		return False;
 	}
+
 
 	// The followikng function will call the above functions.
 	// This will make a caller's method calling these routines easier.
