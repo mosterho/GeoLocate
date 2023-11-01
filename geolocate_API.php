@@ -33,9 +33,9 @@ class cls_geolocateapi {
 	function __construct(){
 		$this->my_key = file_get_contents("/home/ESIS/GeoLocate/keys/geolocate.key"); # This is a simple text file, not JSON
 
-		$this->fct_load_latlong();  // Load the latitudce/longitude JSON file.
+		$this->fct_load_latlong();  // Load the latitude/longitude JSON file.
 
-		// Load and instantiate the error handler/logging class. 
+		// Load and instantiate the error handler/logging class.
 		$includestr = '/home/ESIS/errorhandler/error_handler.php';
 		if(file_exists($includestr)){
 			include $includestr;
