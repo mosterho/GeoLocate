@@ -1,9 +1,0 @@
-{
-	"whitelist_LATLONG": [
-		["Myrtle Beach, SC", 33.807908647295555, -79.03340733624324, 33.66229759419875, -78.82930196014765],
-		["mb-wide", 34, -80, 32, -77],
-		["Northern NJ", 41.5, -75, 41, -74],
-		["HTVFD via CableVision Systems latitude:40.799955,longitude:-73.650941", 40.81, -73.7, 40.65, -73.6]
-	],
-	"whitelist_verbose": false
-}
