@@ -18,7 +18,6 @@
 // Please see either geolocate_CLI.php or geolocate_CLI_V2.php for examples.
 
 
-
 class cls_geolocateapi {
 	public $my_key;  //geolocate web api key.
 	public $response;  // Response to call to geolocate API (city, state, latitude/longitude. etc)
@@ -28,32 +27,54 @@ class cls_geolocateapi {
 	public $whitelist;  // Whitelist from JSON file
 	public $is_verbose;  // Will produce limited debugging information.
 	public $wrk_cls_error_handler;
-	public $geolocate_available = False;  // Used for logging
+	//public $geolocate_available = False;  // Used for logging
+
 
 	function __construct(){
-		$this->my_key = file_get_contents("/home/ESIS/GeoLocate/keys/geolocate.key"); # This is a simple text file, not JSON
-
+		$this->fct_load_geolocatekey();  // Load the ip2location.IO file's key.
 		$this->fct_load_latlong();  // Load the latitude/longitude JSON file.
+		$this->fct_load_errorhandler();  // Load the error handler/logging subsystem.
 
-		// Load and instantiate the error handler/logging class.
-		$includestr = '/home/ESIS/errorhandler/error_handler.php';
-		if(file_exists($includestr)){
-			include $includestr;
-			$this->wrk_cls_error_handler = new cls_error_handler();
-			#var_dump($includestr);
-			$this->geolocate_available = True;
-		}
 		if($this->is_verbose){
 			echo '1. Within geolocate_API, processed __construct'.PHP_EOL;
 		}
 	}
 
 
+	// Load the ip2location.IO file, key used to access external
+	// Geolocate information.
+	function fct_load_geolocatekey(){
+		$filename = "/home/ESIS/GeoLocate/keys/geolocate.key";
+		if(file_exists($filename)){
+			$this->my_key = file_get_contents($filename);
+		}
+	}
+
+
+	// This will load the latlong2.json file. This function is called
+	// separately by the geolocaste latlong maintenance program.
 	function fct_load_latlong(){
-		$my_file_json = file_get_contents("/home/ESIS/GeoLocate/keys/latlong2.json");
-		$this->my_decode_file_json = json_decode($my_file_json);
-		$this->whitelist = $this->my_decode_file_json->{"whitelist_LATLONG"};
-		$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
+		$filename = "/home/ESIS/GeoLocate/keys/latlong2.json";
+		if(file_exists($filename)){
+			$my_file_json = file_get_contents($filename);
+			$this->my_decode_file_json = json_decode($my_file_json);
+			$this->whitelist = $this->my_decode_file_json->whitelist_LATLONG;
+			$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
+		}
+		else{
+			echo 'In geolocate_API, function fct_load_latlong, file: '.$filename.' does not exist or lacks authority to read it';
+			die();
+		}
+	}
+
+
+	function fct_load_errorhandler(){
+		$includestr = '/home/ESIS/errorhandler/error_handler.php';
+		if(file_exists($includestr)){
+			include $includestr;
+			$this->wrk_cls_error_handler = new cls_error_handler();
+			//$this->geolocate_available = True;
+		}
 	}
 
 
@@ -202,7 +223,6 @@ class cls_geolocateapi {
 		}
 		// If this is a LAN IP, skip testing
 		$is_LANIP = $this->fct_test_LAN($arg_incoming);
-		#var_dump($is_LANIP);
 		if($is_LANIP == true){
 			$is_whitelisted = true;
 		}
@@ -226,12 +246,12 @@ class cls_geolocateapi {
 
 		}
 		// Comment the following line to NOT write to syslog.
-		if($this->geolocate_available == True){
-			$this->fct_geolog($is_whitelisted);
-		}
-		else{
-			echo '<br>12. ******************** Geolocate JSON file does not exist'.PHP_EOL;
-		}
+		//if($this->geolocate_available == True){
+		$this->fct_geolog($is_whitelisted);
+		//}
+		//else{
+			//echo '<br>12. ******************** Geolocate JSON file does not exist'.PHP_EOL;
+		//}
 		return $is_whitelisted;
 	}
 }
