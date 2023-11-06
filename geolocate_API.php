@@ -27,7 +27,6 @@ class cls_geolocateapi {
 	public $whitelist;  // Whitelist from JSON file
 	public $is_verbose;  // Will produce limited debugging information.
 	public $wrk_cls_error_handler;
-	//public $geolocate_available = False;  // Used for logging
 
 
 	function __construct(){
@@ -59,7 +58,7 @@ class cls_geolocateapi {
 			$my_file_json = file_get_contents($filename);
 			$this->my_decode_file_json = json_decode($my_file_json);
 			$this->whitelist = $this->my_decode_file_json->whitelist_LATLONG;
-			$this->is_verbose = $this->my_decode_file_json->{"whitelist_verbose"};
+			$this->is_verbose = $this->my_decode_file_json->whitelist_verbose;
 		}
 		else{
 			echo 'In geolocate_API, function fct_load_latlong, file: '.$filename.' does not exist or lacks authority to read it';
@@ -73,7 +72,6 @@ class cls_geolocateapi {
 		if(file_exists($includestr)){
 			include $includestr;
 			$this->wrk_cls_error_handler = new cls_error_handler();
-			//$this->geolocate_available = True;
 		}
 	}
 
@@ -246,12 +244,8 @@ class cls_geolocateapi {
 
 		}
 		// Comment the following line to NOT write to syslog.
-		//if($this->geolocate_available == True){
 		$this->fct_geolog($is_whitelisted);
-		//}
-		//else{
-			//echo '<br>12. ******************** Geolocate JSON file does not exist'.PHP_EOL;
-		//}
+
 		return $is_whitelisted;
 	}
 }
