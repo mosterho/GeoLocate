@@ -43,7 +43,7 @@ class cls_geolocateapi {
 	// Load the ip2location.IO file, key used to access external
 	// Geolocate information.
 	function fct_load_geolocatekey(){
-		$filename = "/home/ESIS/GeoLocate/keys/geolocate.key";
+		$filename = "/home/ESIS/dataonly/GeoLocate_data/keys/geolocate.key";
 		if(file_exists($filename)){
 			$this->my_key = file_get_contents($filename);
 		}
@@ -53,7 +53,7 @@ class cls_geolocateapi {
 	// This will load the latlong2.json file. This function is called
 	// separately by the geolocaste latlong maintenance program.
 	function fct_load_latlong(){
-		$filename = "/home/ESIS/GeoLocate/keys/latlong2.json";
+		$filename = "/home/ESIS/dataonly/GeoLocate_data/keys/latlong2.json";
 		if(file_exists($filename)){
 			$my_file_json = file_get_contents($filename);
 			$this->my_decode_file_json = json_decode($my_file_json);
