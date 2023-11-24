@@ -2,7 +2,6 @@
 
 ## This will provide code for PHP calls to IP2Location web service.
 
-
 ## Basics
 This set of programs will retrieve basic information about an IP using a web service call. They are "geolocate_API.php, "geolocate_CLI.php" and "geolocate_CLI_V2.php". The programs in this repository are written in PHP. The API program is a modified copy the PHP code in the IP2Location website.  
 
