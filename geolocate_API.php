@@ -27,6 +27,7 @@ class cls_geolocateapi {
 	public $whitelist;  // Whitelist from JSON file
 	public $is_verbose;  // Will produce limited debugging information.
 	public $wrk_cls_error_handler;
+	public $email_alert;
 
 
 	function __construct(){
@@ -46,6 +47,12 @@ class cls_geolocateapi {
 		$filename = "/home/ESIS/dataonly/GeoLocate_data/keys/geolocate.key";
 		if(file_exists($filename)){
 			$this->my_key = file_get_contents($filename);
+		}
+
+		// Email will not work in Azure like this, try something else
+		$filename = "/home/ESIS/dataonly/GeoLocate_data/keys/email_alert.json";
+		if(file_exists($filename)){
+			$this->email_alert = file_get_contents($filename);
 		}
 	}
 
@@ -159,7 +166,7 @@ class cls_geolocateapi {
 				}
 				if($this->is_verbose) {
 					echo "<br>5. within fct_retrieve_IP_info, the curl_getinfo result with http_code: ";
-					echo $info['http_code'] . " " . $http_codes[$info['http_code']];
+					//echo $info['http_code'] . " " . $http_codes[$info['http_code']];
 				}
 			}
 
@@ -245,6 +252,16 @@ class cls_geolocateapi {
 		}
 		// Comment the following line to NOT write to syslog.
 		$this->fct_geolog($is_whitelisted);
+		/*   email will not work this way in Azure (can't update php.ini?), try something else.
+		if(!$is_whitelisted){
+			// send email to ESIS webmaster
+			$email_alert_decoded = json_decode($this->email_alert);
+			$to = $email_alert_decoded->email_alert->to;
+			$subject = $email_alert_decoded->email_alert->subject;
+			$message = $email_alert_decoded->email_alert->message.date(DATE_ATOM);
+			mail($to, $subject, $message);
+		}
+		*/
 
 		return $is_whitelisted;
 	}
