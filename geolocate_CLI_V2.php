@@ -16,6 +16,8 @@ try{
 	echo "<br>Is IP whitelisted?: ".$is_whitelisted;
 	echo '<br>Client IP: '.$cls_geolocate->client_IP.PHP_EOL;
 	echo '<br>class response variable?---'.$cls_geolocate->response;
+	echo '<br>';
+	var_dump($cls_geolocate);
 
 }
 catch(Exception $e){
