@@ -210,14 +210,14 @@ class cls_geolocateapi
 	// This function will perform a basic check for LAN IPs that are passed in
 	public function fct_test_LAN($arg_IP)
 	{
-		if (!$this->log_only) {
-			if ($arg_IP != '') {
-				if (substr($arg_IP, 0, 10) == '192.168.0.' or substr($arg_IP, 0, 7) == '172.16.' or substr($arg_IP, 0, 3) == '10.' or substr($arg_IP, 0, 9) == '127.0.0.1') {
-					$this->LAN_IP = True;
-					return True;
-				}
+		//if (!$this->log_only) {
+		if ($arg_IP != '') {
+			if (substr($arg_IP, 0, 10) == '192.168.0.' or substr($arg_IP, 0, 7) == '172.16.' or substr($arg_IP, 0, 3) == '10.' or substr($arg_IP, 0, 9) == '127.0.0.1') {
+				$this->LAN_IP = True;
+				return True;
 			}
 		}
+		//}
 		$this->LAN_IP = False;
 		return False;
 	}
@@ -273,4 +273,5 @@ class cls_geolocateapi
 		return $is_whitelisted;
 	}
 }
+
 ?>
